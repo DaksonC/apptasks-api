@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { taskRepository } from "../repositories/taskRepository";
+import { taskRepository } from "../repository/taskRepository";
 
 export class TasksController {
   async createTask(request: Request, response: Response) {
