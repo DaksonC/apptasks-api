@@ -1,19 +1,32 @@
 import { Request, Response } from "express";
 import { departamentRepository } from "../repository/departamentRepository";
+import { userRepository } from "../repository/userRepository";
 
 export class DepartamentsController {
+
   async createDepartament(request: Request, response: Response) {
     const { name } = request.body;
-
-    if (!name) {
-      return response.status(400).json({
-        message: 'Campos obrigatórios não preenchidos!'
-      });
-    }
+    const { user_id } = request.params;
 
     try {
+
+      if (!name) {
+        return response.status(400).json({
+          message: 'Campos obrigatórios não preenchidos!'
+        });
+      }
+
+      const user = await userRepository.findOneBy({ id: Number(user_id) });
+
+      if (!user) {
+        return response.status(400).json({
+          message: 'Usuário não encontrado!'
+        });
+      }
+
       const newDepartament = departamentRepository.create({
-        name
+        name,
+        users: [user]
       });
 
       await departamentRepository.save(newDepartament);

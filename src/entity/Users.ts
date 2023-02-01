@@ -1,19 +1,26 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToMany, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Departaments } from "./Departaments";
+import { Tasks } from "./Tasks";
 
 @Entity()
 export class Users {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ type: "text", nullable: true })
   name: string;
 
-  @Column()
+  @Column({ type: "text", nullable: true })
   email: string;
 
-  @CreateDateColumn()
-  created_at: Date;
+  @Column({ type: "text", nullable: true })
+  password: string;
 
-  @CreateDateColumn()
-  updated_at: Date;
+  @ManyToOne(() => Departaments, departaments => departaments.users)
+  @JoinColumn({ name: "department_id" })
+  department: Departaments;
+
+  @ManyToMany(() => Tasks, tasks => tasks.users)
+  tasks: Tasks[];
+
 }

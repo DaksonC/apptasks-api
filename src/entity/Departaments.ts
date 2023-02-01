@@ -1,4 +1,5 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, JoinTable, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Users } from "./Users";
 
 @Entity()
 export class Departaments {
@@ -13,4 +14,7 @@ export class Departaments {
 
   @CreateDateColumn()
   updated_at: Date;
+
+  @OneToMany(() => Users, users => users.department)
+  users: Users[];
 }

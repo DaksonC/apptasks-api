@@ -1,25 +1,40 @@
+import bcrypt from "bcrypt";
 import { Request, Response } from "express";
+
 import { userRepository } from "../repository/userRepository";
+import { taskRepository } from "../repository/taskRepository";
+import { departamentRepository } from "../repository/departamentRepository";
 
 export class UsersController {
   async createUser(request: Request, response: Response) {
-    const { name, email } = request.body;
+    const { name, email, password } = request.body;
 
-    if (!name || !email) {
+    if (!name || !email || !password) {
       return response.status(400).json({
         message: 'Campos obrigatórios não preenchidos!'
       });
     }
 
+    const userExists = await userRepository.findOneBy({ email });
+
+    if (userExists) {
+      return response.status(400).json({ message: 'Usuário já cadastrado!' });
+    }
+
     try {
+      const hashPassword = await bcrypt.hash(password, 10);
+
       const newUser = userRepository.create({
         name,
-        email
+        email,
+        password: hashPassword
       });
 
       await userRepository.save(newUser);
 
-      return response.status(201).json(newUser);
+      const { password: _, ...user } = newUser;
+
+      return response.status(201).json(user);
     } catch (error) {
       return response.status(500).json({
         message: 'Erro interno do servidor!'
@@ -43,15 +58,15 @@ export class UsersController {
     const { id } = request.params;
 
     try {
-      const users = await userRepository.findOneBy({ id: Number(id) });
+      const user = await userRepository.findOneBy({ id: Number(id) });
 
-      if (!users) {
+      if (!user) {
         return response.status(404).json({
           message: 'Usuário não encontrado!'
         });
       }
 
-      return response.json(users);
+      return response.json(user);
     } catch (error) {
       return response.status(500).json({
         message: 'Erro interno do servidor!'
@@ -96,6 +111,58 @@ export class UsersController {
       return response.status(404).json({
         message: 'Usuário não encontrado!'
       });
+    } catch (error) {
+      return response.status(500).json({
+        message: 'Erro interno do servidor!'
+      });
+    }
+  }
+
+  async userCreateTasks(request: Request, response: Response) {
+    const { user_id } = request.params;
+    const { task_id } = request.body;
+
+    try {
+      const user = await userRepository.findOneBy({ id: Number(user_id) });
+
+      if (!user) {
+        return response.status(404).json({
+          message: 'Usuário não encontrado!'
+        });
+      }
+
+      const task = await taskRepository.findOneBy({ id: Number(task_id) });
+
+      if (!task) {
+        return response.status(404).json({
+          message: 'Tarefa não encontrada!'
+        });
+      }
+
+      const userUpdatedTasks = {
+        ...user,
+        tasks: [task],
+      }
+
+      await userRepository.save(userUpdatedTasks);
+
+      return response.status(200).json(user)
+    } catch (error) {
+      return response.status(500).json({
+        message: 'Erro interno do servidor!'
+      });
+    }
+  }
+
+  async userList(request: Request, response: Response) {
+    try {
+      const user = await userRepository.find({
+        relations: {
+          tasks: true,
+        }
+      })
+
+      return response.status(200).json(user);
     } catch (error) {
       return response.status(500).json({
         message: 'Erro interno do servidor!'
