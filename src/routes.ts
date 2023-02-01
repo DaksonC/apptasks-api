@@ -1,13 +1,15 @@
 import { Router } from "express";
+
 import { UsersController } from "./controller/UsersController";
 import { TasksController } from "./controller/TasksController";
+import { authMiddleware } from "./middlewares/authMiddleware";
 import { DepartamentsController } from "./controller/DepartamentsController";
 
 const routes = Router();
 
 routes.post('/users', new UsersController().createUser);
 routes.post('/login', new UsersController().login);
-routes.get('/profile', new UsersController().getProfile);
+routes.get('/profile', authMiddleware, new UsersController().getProfile);
 routes.get('/users', new UsersController().userList);
 routes.post('/users/:user_id/tasks', new UsersController().userCreateTasks);
 routes.post('/departaments/:user_id', new DepartamentsController().createDepartament);

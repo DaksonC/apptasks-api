@@ -80,29 +80,7 @@ export class UsersController {
   }
 
   async getProfile(request: Request, response: Response) {
-    const { authorization } = request.headers;
-
-    if (!authorization) {
-      return response.status(401).json({
-        message: 'Token não informado!'
-      });
-    }
-
-    const token = authorization.split(' ')[1];
-
-    const { id } = jwt.verify(token, process.env.JWT_SECRET ?? '') as { id: number };
-
-    const user = await userRepository.findOneBy({ id });
-
-    if (!user) {
-      return response.status(404).json({
-        message: 'Usuário não encontrado!'
-      });
-    }
-
-    const { password: _, ...userWithoutPassword } = user;
-
-    return response.json(userWithoutPassword);
+    return response.json(request.user);
   }
 
   async listUsers(request: Request, response: Response) {
