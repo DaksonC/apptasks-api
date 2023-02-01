@@ -5,15 +5,18 @@ import { DepartamentsController } from "./controller/DepartamentsController";
 
 const routes = Router();
 
-// routes.get('/users', new UsersController().listUsers);
 routes.post('/users', new UsersController().createUser);
+routes.post('/login', new UsersController().login);
+routes.get('/profile', new UsersController().getProfile);
+routes.get('/users', new UsersController().userList);
+routes.post('/users/:user_id/tasks', new UsersController().userCreateTasks);
+routes.post('/departaments/:user_id', new DepartamentsController().createDepartament);
+
+// routes.get('/users', new UsersController().listUsers);
 routes.get('/users/:id', new UsersController().getUser);
 routes.put('/users/:id', new UsersController().updateUser);
 routes.delete('/users/:id', new UsersController().deleteUser);
 
-routes.get('/users', new UsersController().userList);
-routes.post('/users/:user_id/tasks', new UsersController().userCreateTasks);
-routes.post('/departaments/:user_id', new DepartamentsController().createDepartament);
 
 routes.get('/tasks', new TasksController().listTasks);
 routes.post('/tasks', new TasksController().createTask);

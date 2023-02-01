@@ -1,9 +1,9 @@
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 import { Request, Response } from "express";
 
 import { userRepository } from "../repository/userRepository";
 import { taskRepository } from "../repository/taskRepository";
-import { departamentRepository } from "../repository/departamentRepository";
 
 export class UsersController {
   async createUser(request: Request, response: Response) {
@@ -40,6 +40,69 @@ export class UsersController {
         message: 'Erro interno do servidor!'
       });
     }
+  }
+
+  async login(request: Request, response: Response) {
+    const { email, password } = request.body;
+
+    const user = await userRepository.findOneBy({ email });
+
+    if (!user) {
+      return response.status(400).json({
+        message: 'Usuário ou Senha não invalido!'
+      });
+    }
+
+    try {
+      const isValidPassword = await bcrypt.compare(password, user.password);
+
+      if (!isValidPassword) {
+        return response.status(400).json({
+          message: 'Usuário ou Senha não invalido!'
+        });
+      }
+
+      const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET ?? '', {
+        expiresIn: '5d'
+      });
+
+      const { password: _, ...userWithoutPassword } = user;
+
+      return response.json({
+        user: userWithoutPassword,
+        token
+      });
+    } catch (error) {
+      return response.status(500).json({
+        message: 'Erro interno do servidor!'
+      });
+    }
+  }
+
+  async getProfile(request: Request, response: Response) {
+    const { authorization } = request.headers;
+
+    if (!authorization) {
+      return response.status(401).json({
+        message: 'Token não informado!'
+      });
+    }
+
+    const token = authorization.split(' ')[1];
+
+    const { id } = jwt.verify(token, process.env.JWT_SECRET ?? '') as { id: number };
+
+    const user = await userRepository.findOneBy({ id });
+
+    if (!user) {
+      return response.status(404).json({
+        message: 'Usuário não encontrado!'
+      });
+    }
+
+    const { password: _, ...userWithoutPassword } = user;
+
+    return response.json(userWithoutPassword);
   }
 
   async listUsers(request: Request, response: Response) {
